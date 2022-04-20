@@ -52,6 +52,7 @@ const isAuthenticated = (req, res, next) => {
     }
 }
 
+//Route for getting homepage if user is authenticated
 Router.get("/", isAuthenticated, (req, res) => {
     console.log(req.user)
     User.findOne({clientID : req.user}, (err, user) => {
