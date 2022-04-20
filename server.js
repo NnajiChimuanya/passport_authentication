@@ -20,6 +20,7 @@ app.use(session({
      }
 }));
 
+app.use(express.static("public/"))
 app.use(passport.initialize())
 app.use(passport.session())
 
@@ -53,7 +54,15 @@ passport.deserializeUser(function(id, done) {
   
 });
 
-app.get("/", (req, res) => {
+const isAuthenticated = (req, res, next) => {
+  if(req.user) {
+    next()
+  } else {
+    res.redirect("login")
+  }
+}
+
+app.get("/", isAuthenticated, (req, res) => {
   console.log(req.user)
   res.render("home")
 })
