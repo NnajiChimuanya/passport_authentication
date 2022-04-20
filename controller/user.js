@@ -1,20 +1,27 @@
 const Router = require("express").Router()
 const mongoose = require("mongoose")
 const passport = require("passport")
-const GithubStrategy = require("passport-github")
-
-
-mongoose.connect("mongodb://localhost:27017/passport_authentication", (err) => {
-    if(err) throw err
-    console.log("Connected to database succeffully")
-})
-
-Router.get("/auth", (req, res) => res.send("Authenticattionn"))
+const GitHubStrategy = require("passport-github")
+const dotenv = require("dotenv")
+const User = require("../model/user")
+dotenv.config()
 
 
 
 
 
-Router.get("/auth/github")
 
-module.exports = Router
+
+Router.get("/login", (req, res) => res.render("signup"))
+
+
+
+//Router.get("/", (res, req) => res.send("Authenticated"))
+
+Router.get('/auth/github', passport.authenticate("github"))
+
+Router.get("/auth/github/callback", passport.authenticate("github", { failureRedirect : "/login"}), (req, res) => res.redirect("/ok"))
+
+
+
+module.exports = Router 
