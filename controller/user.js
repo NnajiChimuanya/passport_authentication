@@ -24,10 +24,23 @@ passport.use(new GitHubStrategy({
   },
   function(accessToken, refreshToken, profile, done) {
    console.log(profile)
-   User.findOneAndUpdate({name : profile.displayName}, {name : profile.displayName, userId : profile.id},{upsert:true}, (err, user)=> {
-       if(err) throw err
+
+   User.findOne({clientID : profile.id}, async (err, user) => {
+     if(err) throw err
+
+     if(user !== null) {
+       done(null, profile)
+     } else {
+        const newUser = await new User({
+          name : profile.displayName,
+          clientId : profile.id
+        })
+        newUser.save((err, user) => {
+          if(err) throw err
+        })
+        done(null, profile)
+     }
    })
-   done(null, profile)
   }
 ));
 
@@ -41,10 +54,12 @@ const isAuthenticated = (req, res, next) => {
 
 Router.get("/", isAuthenticated, (req, res) => {
     console.log(req.user)
-    User.findOne({userId : req.user }, (err, user) => {
-        res.render("home", {user : user})
+    User.findOne({clientID : req.user}, (err, user) => {
+      if(err) throw err
+      res.render("home", {user : user})
     })
     
+   
   })
   
 Router.get("/login", (req, res) => res.render("signup"))
