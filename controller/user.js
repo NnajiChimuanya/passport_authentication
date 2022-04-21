@@ -2,6 +2,7 @@ const Router = require("express").Router()
 const mongoose = require("mongoose")
 const passport = require("passport")
 const GitHubStrategy = require("passport-github")
+const GoogleStrategy = require("passport-google-oauth20").Strategy
 const dotenv = require("dotenv")
 const User = require("../model/user")
 const { resetWatchers } = require("nodemon/lib/monitor/watch")
@@ -46,10 +47,34 @@ passport.use(new GitHubStrategy({
 ));
 
 //setting up google strategy
+passport.use(new GoogleStrategy({
+  clientID: process.env.Google_clientID,
+  clientSecret: process.env.Google_clientSecret,
+  callbackURL: process.env.Google_callbackURL
+},
+function(accessToken, refreshToken, profile, done) {
+  console.log(profile)
+  User.findOne({clientId : profile.id}, (err, user) => {
+    if(err) throw err
+    if(user !== null) {
+      done(null, user)
+    } else {
+      const newUser = new User({
+        name : profile.displayName,
+        clientId : profile.id,
+        image : profile.photos[0].value
+      })
+      newUser.save((err, user) => {
+        if(err) throw err
+        done(null, profile)
+      })
+    }
+  })
+}
+));
 
 
-
-
+//Authorization
 const isAuthenticated = (req, res, next) => {
     if(req.user) {
       next()
@@ -75,7 +100,16 @@ Router.get('/auth/github', passport.authenticate("github"))
   
 Router.get("/auth/github/callback", passport.authenticate("github", { failureRedirect : "/login"}), (req, res) => {
     res.redirect("/")
-  })
+})
+
+Router.get('/auth/google', passport.authenticate('google', { scope: ['profile'] }));
+
+Router.get('/auth/google/callback', 
+  passport.authenticate('google', { failureRedirect: '/login' }),
+  function(req, res) {
+    // Successful authentication, redirect home.
+    res.redirect('/');
+});
 
 
 
