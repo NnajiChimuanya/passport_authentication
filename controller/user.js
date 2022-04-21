@@ -18,9 +18,9 @@ mongoose.connect("mongodb://localhost:27017/passport_authentication", (err) => {
 
 //setting up github strategy
 passport.use(new GitHubStrategy({
-    clientID: process.env.clientID,
-    clientSecret: process.env.clientSecret,
-    callbackURL: process.env.callbackURL
+    clientID: process.env.Github_clientID,
+    clientSecret: process.env.Github_clientSecret,
+    callbackURL: process.env.Github_callbackURL
   },
   function(accessToken, refreshToken, profile, done) {
    console.log(profile)
@@ -33,7 +33,8 @@ passport.use(new GitHubStrategy({
      } else {
         const newUser = await new User({
           name : profile.displayName,
-          clientId : profile.id
+          clientId : profile.id,
+          image : profile.photos[0].value
         })
         newUser.save((err, user) => {
           if(err) throw err
@@ -43,6 +44,11 @@ passport.use(new GitHubStrategy({
    })
   }
 ));
+
+//setting up google strategy
+
+
+
 
 const isAuthenticated = (req, res, next) => {
     if(req.user) {
@@ -61,7 +67,7 @@ Router.get("/", isAuthenticated, (req, res) => {
     })
     
    
-  })
+})
   
 Router.get("/login", (req, res) => res.render("signup"))
   
