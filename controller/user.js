@@ -111,6 +111,11 @@ Router.get('/auth/google/callback',
     res.redirect('/');
 });
 
+Router.get("/logout", (req, res) => {
+  req.logOut()
+  res.redirect("/login")
+})
+
 
 
 module.exports = Router 
