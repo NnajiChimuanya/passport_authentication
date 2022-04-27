@@ -3,6 +3,7 @@ const mongoose = require("mongoose")
 const passport = require("passport")
 const GitHubStrategy = require("passport-github")
 const GoogleStrategy = require("passport-google-oauth20").Strategy
+const TwitterStrategy = require("passport-twitter")
 const dotenv = require("dotenv")
 const User = require("../model/user")
 const { resetWatchers } = require("nodemon/lib/monitor/watch")
@@ -57,7 +58,33 @@ function(accessToken, refreshToken, profile, done) {
   User.findOne({clientId : profile.id}, (err, user) => {
     if(err) throw err
     if(user !== null) {
-      done(null, user)
+      done(null, profile)
+    } else {
+      const newUser = new User({
+        name : profile.displayName,
+        clientId : profile.id,
+        image : profile.photos[0].value
+      })
+      newUser.save((err, user) => {
+        if(err) throw err
+        done(null, profile)
+      })
+    }
+  })
+}
+));
+
+//setting up twitter startegy
+passport.use(new TwitterStrategy({
+  consumerKey: process.env.TWITTER_CONSUMER_KEY,
+  consumerSecret: process.env.TWITTER_CONSUMER_SECRET,
+  callbackURL: process.env.TWITTER_CALLBACKURL
+},
+function(token, tokenSecret, profile, done) {
+  User.findOne({clientId : profile.id}, (err, user) => {
+    if(err) throw err
+    if(user !== null) {
+      done(null, profile)
     } else {
       const newUser = new User({
         name : profile.displayName,
@@ -106,6 +133,15 @@ Router.get('/auth/google', passport.authenticate('google', { scope: ['profile'] 
 
 Router.get('/auth/google/callback', 
   passport.authenticate('google', { failureRedirect: '/login' }),
+  function(req, res) {
+    // Successful authentication, redirect home.
+    res.redirect('/');
+});
+
+Router.get('/auth/twitter', passport.authenticate('twitter'));
+
+Router.get('/auth/twitter/callback', 
+passport.authenticate('twitter', { failureRedirect: '/login' }),
   function(req, res) {
     // Successful authentication, redirect home.
     res.redirect('/');
