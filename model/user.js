@@ -2,7 +2,7 @@ const mongoose = require("mongoose")
 
 const userSchema = new mongoose.Schema({
     name : String,
-    clientId : Number,
+    clientId : String,
     image : String
 }, {timestamps : true})
 
